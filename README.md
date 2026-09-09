@@ -36,6 +36,12 @@ mounted, durable directory in production; the default `storage/uploads` path is
 intended for a single local application instance. Payment and mail secrets remain
 environment variables and are never stored through the settings page.
 
+The visual foundation is documented in `docs/design-system.md`. Reusable UI
+components live in `src/components/ui`, while public chrome and authenticated
+workspace shells live in `src/components/site` and `src/components/layout`.
+Initial poultry photography is stored locally under `public/images/poultry`;
+source authors and reusable licenses are recorded in that folder.
+
 ## Quality checks
 
 ```bash

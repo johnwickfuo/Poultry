@@ -1,0 +1,11 @@
+import Link from "next/link";
+
+import { LogoutButton } from "@/components/auth/logout-button";
+import { BrandMark } from "@/components/site/brand-mark";
+import { Icon } from "@/components/ui/icons";
+
+export type ShellNavItem = { href: string; label: string };
+
+export function DashboardShell({ companyName, shortName, logo, eyebrow, userName, navigation, children }: { companyName: string; shortName: string; logo?: string; eyebrow: string; userName: string; navigation: ShellNavItem[]; children: React.ReactNode }) {
+  return <div className="min-h-screen bg-eggshell lg:grid lg:grid-cols-[17rem_1fr]"><aside className="border-b border-coop/10 bg-coop px-4 py-4 text-white lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:px-5 lg:py-6"><div className="flex items-center justify-between gap-4"><BrandMark companyName={companyName} inverse logo={logo} shortName={shortName}/><Link aria-label="Public homepage" className="grid size-10 place-items-center rounded-control border border-white/15 text-white/70 hover:border-yolk hover:text-yolk lg:hidden" href="/"><Icon className="size-5" name="arrow"/></Link></div><div className="mt-6 hidden lg:block"><p className="market-label text-yolk">{eyebrow}</p><p className="mt-2 truncate text-sm text-white/60">{userName}</p></div><nav aria-label={`${eyebrow} navigation`} className="mt-4 flex gap-2 overflow-x-auto lg:mt-8 lg:block lg:space-y-1">{navigation.map((item) => <Link className="flex min-h-11 shrink-0 items-center justify-between rounded-control px-3 text-sm font-semibold text-white/75 hover:bg-white/8 hover:text-white" href={item.href} key={item.href}>{item.label}<Icon className="hidden size-4 lg:block" name="chevron"/></Link>)}</nav><div className="mt-6 hidden border-t border-white/10 pt-5 lg:block"><LogoutButton/></div></aside><div className="min-w-0"><header className="flex min-h-16 items-center justify-between border-b border-coop/10 bg-white px-5 sm:px-8"><div><p className="market-label text-sack">{eyebrow}</p><p className="text-sm font-semibold text-coop">Welcome, {userName}</p></div><Link className="hidden text-sm font-semibold text-palm hover:text-coop sm:inline" href="/">View marketplace</Link></header><main className="p-5 sm:p-8 lg:p-10">{children}</main></div></div>;
+}

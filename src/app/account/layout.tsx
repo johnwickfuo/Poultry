@@ -1,20 +1,30 @@
-import { AccountNavigation } from "@/components";
-import { LogoutButton } from "@/components/auth/logout-button";
+import { DashboardShell, type ShellNavItem } from "@/components";
 import { requireUser } from "@/server/authorization";
+import { BrandingService } from "@/server/branding";
 
 export default async function AccountLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const user = await requireUser();
   const roles = user.roles.map(({ role }) => role.name);
+  const branding = await BrandingService.getIdentity();
+  const navigation: ShellNavItem[] = [
+    { href: "/account", label: "Account overview" },
+    ...(roles.includes("seller") ? [{ href: "/seller", label: "Seller workspace" }] : []),
+    ...(roles.includes("mentor") ? [{ href: "/mentor", label: "Mentor workspace" }] : []),
+    ...(roles.includes("admin") ? [{ href: "/admin", label: "Administration" }] : []),
+  ];
 
   return (
-    <main className="mx-auto min-h-screen max-w-5xl px-6 py-12">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <AccountNavigation roles={roles} />
-        <LogoutButton />
-      </div>
-      <div className="mt-10">{children}</div>
-    </main>
+    <DashboardShell
+      companyName={branding.companyName}
+      eyebrow="Your account"
+      logo={branding.logoDark || branding.logo}
+      navigation={navigation}
+      shortName={branding.companyShortName}
+      userName={user.profile?.displayName || user.username}
+    >
+      {children}
+    </DashboardShell>
   );
 }

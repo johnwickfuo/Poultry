@@ -45,7 +45,7 @@ export default async function AdminSettingsPage({
     ]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-10">
+    <div>
       <div className="mx-auto max-w-6xl">
         <div className="rounded-3xl bg-slate-950 p-6 text-white sm:p-8">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">
@@ -118,7 +118,7 @@ export default async function AdminSettingsPage({
           ) : null}
         </section>
       </div>
-    </main>
+    </div>
   );
 }
 
