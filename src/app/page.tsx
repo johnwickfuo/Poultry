@@ -1,12 +1,14 @@
 import { HomeContent } from "@/components/home-content";
 import { BrandingService } from "@/server/branding";
 import { getPublicCategories } from "@/server/categories";
+import { getRequestCartCount } from "@/server/cart";
 
 export default async function Home() {
-  const [branding, categories] = await Promise.all([BrandingService.getIdentity(), getPublicCategories()]);
+  const [branding, categories, cartCount] = await Promise.all([BrandingService.getIdentity(), getPublicCategories(), getRequestCartCount()]);
   return (
     <HomeContent
       address={branding.address}
+      cartCount={cartCount}
       categories={categories.slice(0, 4).map((category) => ({ name: category.name, description: category.description || `Browse ${category.name}`, image: category.imagePath || "/images/poultry/live-birds.webp", href: `/categories/${category.slug}` }))}
       companyName={branding.companyName}
       companyShortName={branding.companyShortName}

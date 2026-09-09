@@ -2,6 +2,7 @@
 
 import { Prisma } from "@prisma/client";
 import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
 
 import { prisma } from "@/server/database/prisma";
 import {
@@ -15,6 +16,7 @@ import type { AuthFormState } from "@/server/authentication/form-state";
 import { signIn, signOut } from "@/server/authentication";
 import { consumeRateLimit } from "@/server/authentication/rate-limit";
 import { getRequestIp } from "@/server/authentication/request";
+import { mergeRequestGuestCart } from "@/server/cart";
 import {
   emailSchema,
   loginSchema,
@@ -128,8 +130,11 @@ export async function loginAction(
       email: parsed.data.email,
       password: parsed.data.password,
       redirectTo: "/account",
+      redirect: false,
     });
-    return { status: "success" };
+    const user = await prisma.user.findFirst({ where: { email: parsed.data.email, status: "ACTIVE", deletedAt: null }, select: { id: true } });
+    if (user) await mergeRequestGuestCart(user.id);
+    redirect("/account");
   } catch (error) {
     if (error instanceof AuthError) {
       return {

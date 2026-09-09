@@ -25,14 +25,15 @@ type HomeBranding = {
   logo?: string;
   logoDark?: string;
   socialLinks?: Record<string, string>;
+  cartCount?: number;
 };
 
-export function HomeContent({ companyName, companyShortName, tagline, email = "", phone = "", whatsapp = "", address = "", rcNumber = "", logo = "", logoDark = "", socialLinks = {}, categories = defaultCategories }: HomeBranding & { categories?: Array<{ name: string; description: string; image: string; href: string }> }) {
+export function HomeContent({ companyName, companyShortName, tagline, email = "", phone = "", whatsapp = "", address = "", rcNumber = "", logo = "", logoDark = "", socialLinks = {}, cartCount = 0, categories = defaultCategories }: HomeBranding & { categories?: Array<{ name: string; description: string; image: string; href: string }> }) {
   const shortName = companyShortName || companyName;
 
   return (
     <div className="min-h-screen bg-eggshell">
-      <SiteHeader companyName={companyName} logo={logo} shortName={shortName} />
+      <SiteHeader cartCount={cartCount} companyName={companyName} logo={logo} shortName={shortName} />
       <main>
         <section className="relative overflow-hidden border-b border-coop/10">
           <div className="hatchery-grid absolute inset-0 opacity-70" />

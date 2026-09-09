@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
-import { Bitter, Public_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { BrandingService } from "@/server/branding";
 
-const bodyFont = Public_Sans({
+const bodyFont = localFont({
+  src: "./fonts/PublicSans-VF.ttf",
   variable: "--font-public-sans",
-  subsets: ["latin"],
+  display: "swap",
+  weight: "100 900",
 });
 
-const displayFont = Bitter({
+const displayFont = localFont({
+  src: "./fonts/Bitter-VF.ttf",
   variable: "--font-bitter",
-  subsets: ["latin"],
+  display: "swap",
+  weight: "100 900",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
