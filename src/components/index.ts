@@ -1,1 +1,1 @@
-// Shared application components are exported from this module.
+export { AccountNavigation } from "./account-navigation";

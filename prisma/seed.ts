@@ -1,27 +1,63 @@
 import "dotenv/config";
 
-import { UserRole } from "@prisma/client";
+import { UserStatus } from "@prisma/client";
 import { hash } from "bcryptjs";
 
 import { prisma } from "../src/server/database/prisma";
 
+const roleNames = ["admin", "seller", "mentor", "worker", "employer"] as const;
+
 async function main() {
   const name = process.env.SUPER_ADMIN_NAME;
-  const email = process.env.SUPER_ADMIN_EMAIL?.toLowerCase();
+  const email = process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase();
+  const username = process.env.SUPER_ADMIN_USERNAME?.trim().toLowerCase();
   const password = process.env.SUPER_ADMIN_PASSWORD;
 
-  if (!email || !password || password.length < 12) {
+  if (!email || !username || !password || password.length < 12) {
     throw new Error(
-      "Set SUPER_ADMIN_EMAIL and a SUPER_ADMIN_PASSWORD of at least 12 characters.",
+      "Set SUPER_ADMIN_EMAIL, SUPER_ADMIN_USERNAME and a SUPER_ADMIN_PASSWORD of at least 12 characters.",
     );
   }
 
-  const passwordHash = await hash(password, 12);
+  await prisma.$transaction(async (tx) => {
+    for (const roleName of roleNames) {
+      await tx.role.upsert({
+        where: { name: roleName },
+        update: {},
+        create: { name: roleName },
+      });
+    }
 
-  await prisma.user.upsert({
-    where: { email },
-    update: { name, passwordHash, role: UserRole.SUPER_ADMIN },
-    create: { name, email, passwordHash, role: UserRole.SUPER_ADMIN },
+    const adminRole = await tx.role.findUniqueOrThrow({
+      where: { name: "admin" },
+    });
+    const passwordHash = await hash(password, 12);
+    const user = await tx.user.upsert({
+      where: { email },
+      update: {
+        username,
+        passwordHash,
+        status: UserStatus.ACTIVE,
+        deletedAt: null,
+      },
+      create: {
+        email,
+        username,
+        passwordHash,
+        status: UserStatus.ACTIVE,
+      },
+    });
+
+    await tx.profile.upsert({
+      where: { userId: user.id },
+      update: { displayName: name, fullName: name },
+      create: { userId: user.id, displayName: name, fullName: name },
+    });
+    await tx.userRole.upsert({
+      where: { userId_roleId: { userId: user.id, roleId: adminRole.id } },
+      update: {},
+      create: { userId: user.id, roleId: adminRole.id },
+    });
   });
 }
 

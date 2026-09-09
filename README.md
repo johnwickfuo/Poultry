@@ -15,6 +15,11 @@ Tailwind CSS, Prisma/MySQL, Auth.js, Zod, and a layered `src/` structure.
 `GET /api/health` performs a minimal database probe and only returns `ok` or
 `degraded` status data. It never returns connection strings or exception details.
 
+The database uses one `User` table with normalized `Role` and `UserRole` records,
+so a user can hold several roles without separate seller, mentor, worker, or
+employer user tables. Run `npm run db:seed` after migration to create the five
+standard roles and the first admin configured in `.env`.
+
 ## Quality checks
 
 ```bash

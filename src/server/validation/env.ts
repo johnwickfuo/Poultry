@@ -34,6 +34,10 @@ export const serverEnvSchema = z.object({
     (value) => (value === "" ? undefined : value),
     z.email().optional(),
   ),
+  SUPER_ADMIN_USERNAME: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().min(3).max(32).regex(/^[a-z0-9_]+$/).optional(),
+  ),
   SUPER_ADMIN_PASSWORD: z.preprocess(
     (value) => (value === "" ? undefined : value),
     z.string().min(12).optional(),

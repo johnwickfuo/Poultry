@@ -1,5 +1,3 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import type { UserRole } from "@prisma/client";
 import { compare } from "bcryptjs";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -8,7 +6,6 @@ import { prisma } from "@/server/database/prisma";
 import { loginSchema } from "@/server/validation/auth";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   providers: [
     Credentials({
@@ -21,8 +18,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
         if (!result.success) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: result.data.email },
+        const user = await prisma.user.findFirst({
+          where: {
+            email: result.data.email,
+            status: "ACTIVE",
+            deletedAt: null,
+          },
+          include: { roles: { include: { role: true } } },
         });
 
         if (!user?.passwordHash) return null;
@@ -32,7 +34,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           user.passwordHash,
         );
 
-        return passwordMatches ? user : null;
+        if (!passwordMatches) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.username,
+          roles: user.roles.map(({ role }) => role.name),
+        };
       },
     }),
   ],
@@ -40,14 +49,16 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.roles = user.roles;
       }
       return token;
     },
     session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as UserRole;
+        session.user.roles = Array.isArray(token.roles)
+          ? token.roles.filter((role): role is string => typeof role === "string")
+          : [];
       }
       return session;
     },
