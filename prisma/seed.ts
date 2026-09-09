@@ -4,6 +4,12 @@ import { UserStatus } from "@prisma/client";
 import { hash } from "bcryptjs";
 
 import { prisma } from "../src/server/database/prisma";
+import {
+  serializeSetting,
+  SETTING_SEED_VALUES,
+  type SettingKey,
+  type SettingValue,
+} from "../src/server/settings/registry";
 
 const roleNames = ["admin", "seller", "mentor", "worker", "employer"] as const;
 
@@ -25,6 +31,17 @@ async function main() {
         where: { name: roleName },
         update: {},
         create: { name: roleName },
+      });
+    }
+
+    for (const [key, value] of Object.entries(SETTING_SEED_VALUES) as Array<
+      [SettingKey, SettingValue<SettingKey>]
+    >) {
+      const serialized = serializeSetting(key, value);
+      await tx.setting.upsert({
+        where: { key },
+        update: {},
+        create: { key, value: serialized },
       });
     }
 

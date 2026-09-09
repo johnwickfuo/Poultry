@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 
+import { BrandingService } from "@/server/branding";
 import { parseServerEnv } from "@/server/validation/env";
 
 export function createMailTransport() {
@@ -27,6 +28,7 @@ async function sendAuthEmail(options: {
 }) {
   const env = parseServerEnv();
   const transport = createMailTransport();
+  const branding = await BrandingService.getIdentity();
 
   if (!env.MAIL_FROM) throw new Error("MAIL_FROM is not configured.");
 
@@ -42,6 +44,7 @@ async function sendAuthEmail(options: {
           <p style="line-height:1.6;color:#475569">${options.message}</p>
           <a href="${options.url}" style="display:inline-block;margin-top:16px;background:#047857;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:600">${options.buttonLabel}</a>
           <p style="margin-top:24px;font-size:12px;color:#64748b">If you did not request this, you can safely ignore this email.</p>
+          <p style="margin-top:12px;font-size:12px;color:#94a3b8">${branding.companyName}</p>
         </div>
       </div>`,
   });

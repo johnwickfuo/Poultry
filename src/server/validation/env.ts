@@ -11,6 +11,7 @@ const optionalString = z.preprocess(
 );
 
 export const serverEnvSchema = z.object({
+  APP_NAME: z.string().trim().min(1).default("Poultry Platform"),
   DATABASE_URL: z.string().startsWith("mysql://"),
   AUTH_SECRET: z.string().min(32),
   APP_URL: z.url(),
@@ -29,6 +30,7 @@ export const serverEnvSchema = z.object({
   FLUTTERWAVE_SECRET_KEY: optionalString,
   GEMINI_API_KEY: optionalString,
   REDIS_URL: optionalUrl,
+  STORAGE_ROOT: optionalString,
   SUPER_ADMIN_NAME: optionalString,
   SUPER_ADMIN_EMAIL: z.preprocess(
     (value) => (value === "" ? undefined : value),

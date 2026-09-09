@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { BrandingService } from "@/server/branding";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,10 +13,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Poultry Platform",
-  description: "Internal application foundation for the poultry platform.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await BrandingService.getIdentity();
+  return {
+    title: {
+      default: branding.companyName,
+      template: `%s | ${branding.companyShortName}`,
+    },
+    description: branding.tagline || `Welcome to ${branding.companyName}.`,
+    icons: branding.favicon ? { icon: branding.favicon } : undefined,
+  };
+}
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

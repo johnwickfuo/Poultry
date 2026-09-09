@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AuthCard } from "@/components/auth/auth-card";
 import { RegisterForm } from "@/components/auth/forms";
 
-export const metadata: Metadata = { title: "Create account | Poultry Platform" };
+export const metadata: Metadata = { title: "Create account" };
 
 export default function RegisterPage() {
   return (

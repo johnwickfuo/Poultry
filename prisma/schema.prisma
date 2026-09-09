@@ -135,3 +135,10 @@ model RateLimit {
 
   @@index([resetAt])
 }
+
+model Setting {
+  key       String   @id @db.VarChar(100)
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

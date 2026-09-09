@@ -26,6 +26,16 @@ revocation. New registrations start as `PENDING` with no roles and become
 `ACTIVE` only after email verification. Suspended and soft-deleted accounts are
 rejected at sign-in and re-checked during subsequent session use.
 
+Platform rules and company identity are stored in the `Setting` table and can be
+updated from `/admin/settings` without a redeploy. Server code reads company
+identity through `BrandingService`; admin-authored content can use `{company}` and
+`{company_short}` placeholders.
+
+Brand media is served from local persistent storage. Set `STORAGE_ROOT` to a
+mounted, durable directory in production; the default `storage/uploads` path is
+intended for a single local application instance. Payment and mail secrets remain
+environment variables and are never stored through the settings page.
+
 ## Quality checks
 
 ```bash

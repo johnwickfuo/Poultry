@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AuthCard } from "@/components/auth/auth-card";
 import { VerifyEmailForm } from "@/components/auth/forms";
 
-export const metadata: Metadata = { title: "Verify email | Poultry Platform" };
+export const metadata: Metadata = { title: "Verify email" };
 
 export default async function VerifyEmailPage({
   searchParams,

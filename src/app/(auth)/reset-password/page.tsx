@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AuthCard } from "@/components/auth/auth-card";
 import { ResetPasswordForm } from "@/components/auth/forms";
 
-export const metadata: Metadata = { title: "Choose password | Poultry Platform" };
+export const metadata: Metadata = { title: "Choose password" };
 
 export default async function ResetPasswordPage({
   searchParams,

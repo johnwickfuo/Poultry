@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AuthCard } from "@/components/auth/auth-card";
 import { LoginForm } from "@/components/auth/forms";
 
-export const metadata: Metadata = { title: "Sign in | Poultry Platform" };
+export const metadata: Metadata = { title: "Sign in" };
 
 export default function LoginPage() {
   return (
