@@ -1,0 +1,15 @@
+import Link from "next/link";
+
+import { Badge, Button, Card, StatusBadge, buttonStyles } from "@/components";
+import { getAdminCategoryTree } from "@/server/categories";
+import { moveCategoryAction, toggleCategoryAction } from "./actions";
+
+export default async function AdminCategoriesPage() {
+  const categories = await getAdminCategoryTree();
+  const count = categories.reduce((total, category) => total + 1 + category.children.length, 0);
+  return <section><p className="market-label text-sack">Marketplace catalogue</p><div className="mt-3 flex flex-wrap items-end justify-between gap-4"><div><h1 className="font-display text-4xl font-black text-coop">Categories</h1><p className="mt-2 text-coop/65">Manage the poultry taxonomy, visibility, ordering and category artwork.</p></div><Link className={buttonStyles()} href="/admin/categories/new">Create category</Link></div><div className="mt-6 flex gap-3"><Badge tone="palm">{categories.length} top level</Badge><Badge>{count} total categories</Badge></div><div className="mt-7 space-y-5">{categories.map((category, index) => <Card className="overflow-hidden" key={category.id}><CategoryRow category={category} first={index === 0} last={index === categories.length - 1}/>{category.children.length ? <div className="divide-y divide-coop/8 border-t border-coop/10 bg-eggshell/45">{category.children.map((subcategory, childIndex) => <CategoryRow category={subcategory} child first={childIndex === 0} key={subcategory.id} last={childIndex === category.children.length - 1}/>)}</div> : <p className="border-t border-coop/10 px-5 py-4 text-sm text-coop/45">No subcategories yet.</p>}</Card>)}</div></section>;
+}
+
+function CategoryRow({ category, child = false, first, last }: { category: { id: string; name: string; slug: string; isActive: boolean; sortOrder: number }; child?: boolean; first: boolean; last: boolean }) {
+  return <div className={`grid gap-4 px-5 py-4 sm:grid-cols-[1fr_auto] sm:items-center ${child ? "sm:pl-10" : ""}`}><div><div className="flex flex-wrap items-center gap-2">{child ? <span className="text-coop/30">↳</span> : null}<h2 className={`${child ? "font-semibold" : "font-display text-lg font-bold"} text-coop`}>{category.name}</h2><StatusBadge status={category.isActive ? "active" : "suspended"}/></div><p className="mt-1 text-xs text-coop/50">/{category.slug} · order {category.sortOrder}</p></div><div className="flex flex-wrap items-center gap-2"><form action={moveCategoryAction.bind(null, category.id, "up")}><Button disabled={first} size="sm" type="submit" variant="ghost">↑ <span className="sr-only">Move up</span></Button></form><form action={moveCategoryAction.bind(null, category.id, "down")}><Button disabled={last} size="sm" type="submit" variant="ghost">↓ <span className="sr-only">Move down</span></Button></form><form action={toggleCategoryAction.bind(null, category.id)}><Button size="sm" type="submit" variant="outline">{category.isActive ? "Deactivate" : "Activate"}</Button></form><Link className={buttonStyles({ size: "sm" })} href={`/admin/categories/${category.id}`}>Edit</Link></div></div>;
+}

@@ -6,7 +6,7 @@ import { buttonStyles } from "@/components/ui/button";
 import { CategoryCard, ResponsiveImage } from "@/components/ui/commerce";
 import { Icon } from "@/components/ui/icons";
 
-const categories = [
+const defaultCategories = [
   { name: "Live birds", description: "Broilers, layers and point-of-lay birds", image: "/images/poultry/live-birds.webp", href: "/categories/live-birds" },
   { name: "Fresh eggs", description: "Table eggs by crate, tray or bulk order", image: "/images/poultry/eggs.webp", href: "/categories/eggs" },
   { name: "Day-old chicks", description: "Hatchery listings and scheduled supply", image: "/images/poultry/day-old-chicks.webp", href: "/categories/day-old-chicks" },
@@ -27,7 +27,7 @@ type HomeBranding = {
   socialLinks?: Record<string, string>;
 };
 
-export function HomeContent({ companyName, companyShortName, tagline, email = "", phone = "", whatsapp = "", address = "", rcNumber = "", logo = "", logoDark = "", socialLinks = {} }: HomeBranding) {
+export function HomeContent({ companyName, companyShortName, tagline, email = "", phone = "", whatsapp = "", address = "", rcNumber = "", logo = "", logoDark = "", socialLinks = {}, categories = defaultCategories }: HomeBranding & { categories?: Array<{ name: string; description: string; image: string; href: string }> }) {
   const shortName = companyShortName || companyName;
 
   return (

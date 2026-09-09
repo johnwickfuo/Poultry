@@ -10,6 +10,7 @@ import {
   type SettingKey,
   type SettingValue,
 } from "../src/server/settings/registry";
+import { POULTRY_TAXONOMY } from "../src/server/categories/taxonomy";
 
 const roleNames = ["admin", "seller", "mentor", "worker", "employer"] as const;
 
@@ -43,6 +44,33 @@ async function main() {
         update: {},
         create: { key, value: serialized },
       });
+    }
+
+    for (const [parentIndex, category] of POULTRY_TAXONOMY.entries()) {
+      const parent = await tx.category.upsert({
+        where: { slug: category.slug },
+        update: {},
+        create: {
+          name: category.name,
+          slug: category.slug,
+          description: category.description,
+          imagePath: category.imagePath,
+          icon: category.icon,
+          sortOrder: parentIndex,
+        },
+      });
+
+      for (const [childIndex, subcategory] of category.children.entries()) {
+        await tx.category.upsert({
+          where: { slug: subcategory.slug },
+          update: { parentId: parent.id },
+          create: {
+            ...subcategory,
+            parentId: parent.id,
+            sortOrder: childIndex,
+          },
+        });
+      }
     }
 
     const adminRole = await tx.role.findUniqueOrThrow({
