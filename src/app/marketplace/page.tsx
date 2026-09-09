@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
-
-export default function MarketplacePage() {
-  redirect("/categories");
-}
+import Link from "next/link";
+import { EmptyState, ProductCard, buttonStyles } from "@/components";
+import { listPublishedProducts } from "@/server/services/product-catalogue";
+export const dynamic = "force-dynamic";
+export default async function MarketplacePage() { const products = await listPublishedProducts(); return <section className="mx-auto max-w-7xl px-5 py-12 sm:px-6 lg:px-8"><p className="market-label text-sack">Approved farm-gate listings</p><div className="mt-3 flex flex-wrap items-end justify-between gap-4"><div><h1 className="font-display text-4xl font-black text-coop sm:text-5xl">Poultry marketplace</h1><p className="mt-3 text-coop/65">Browse products reviewed by the platform and published by approved sellers.</p></div><Link className={buttonStyles({ variant: "outline" })} href="/categories">Browse categories</Link></div>{products.length ? <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard href={`/products/${product.id}`} image={product.images[0]?.path || product.category.imagePath || "/images/poultry/live-birds.webp"} key={product.id} location={product.seller.sellerProfile?.state || undefined} name={product.name} price={product.basePriceKobo / 100} unit={product.unitLabel}/>)}</div> : <div className="mt-9"><EmptyState description="Approved sellers are preparing their first published catalogue listings." title="No published products yet"/></div>}</section>; }

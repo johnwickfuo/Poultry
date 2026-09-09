@@ -7,3 +7,4 @@ export { localStorage } from "./local";
 export { storeSettingMedia } from "./media";
 export { storeSellerLogo } from "./seller-logo";
 export { storeCategoryImage } from "./category-image";
+export { storeProductImage } from "./product-image";

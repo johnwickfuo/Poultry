@@ -19,6 +19,7 @@ export default async function AdminLayout({
         { href: "/admin", label: "Dashboard" },
         { href: "/admin/sellers", label: "Seller applications" },
         { href: "/admin/categories", label: "Categories" },
+        { href: "/admin/products", label: "Product moderation" },
         { href: "/admin/settings", label: "Platform settings" },
         { href: "/admin/mail", label: "Mail previews" },
         { href: "/account", label: "My account" },

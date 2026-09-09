@@ -1,0 +1,7 @@
+import { Button, Card, Money } from "@/components";
+import { requireApprovedSeller } from "@/server/authorization";
+import { getProductForSeller } from "@/server/services/product-catalogue";
+import { addBulkTierAction, deleteBulkTierAction } from "../../actions";
+import { BulkTierForm } from "../../catalogue-forms";
+import { ProductNav } from "../../product-nav";
+export default async function BulkPricingPage({ params }: { params: Promise<{ id: string }> }) { const { id } = await params; const user = await requireApprovedSeller(); const product = await getProductForSeller(id, user.id); return <section><ProductNav id={id}/><h1 className="font-display text-4xl font-black text-coop">Bulk pricing</h1><p className="mt-2 text-coop/65">Set non-overlapping quantity ranges with lower unit prices.</p><Card className="mt-6 p-5 sm:p-7"><BulkTierForm action={addBulkTierAction.bind(null, id)}/></Card><div className="mt-6 space-y-3">{product.bulkPriceTiers.map((tier) => <Card className="flex items-center justify-between gap-4 p-4" key={tier.id}><p className="text-sm text-coop"><strong>{tier.minimumQuantity}</strong> to <strong>{tier.maximumQuantity ?? "any higher quantity"}</strong></p><div className="flex items-center gap-3"><Money amount={tier.unitPriceKobo / 100} className="text-palm"/><form action={deleteBulkTierAction.bind(null, tier.id, id)}><Button size="sm" type="submit" variant="danger">Delete</Button></form></div></Card>)}</div></section>; }

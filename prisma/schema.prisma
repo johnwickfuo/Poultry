@@ -28,6 +28,15 @@ enum SellerVerificationStatus {
   SUSPENDED
 }
 
+enum ProductStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+  ARCHIVED
+}
+
 model User {
   id                     String                   @id @default(cuid())
   email                  String                   @unique
@@ -51,6 +60,8 @@ model User {
   emailDeliveries        EmailDelivery[]
   sellerProfile          SellerProfile?           @relation("SellerOwner")
   approvedSellerProfiles SellerProfile[]          @relation("SellerApprovals")
+  products               Product[]                @relation("SellerProducts")
+  moderatedProducts      Product[]                @relation("ProductModerator")
 }
 
 model Role {
@@ -127,8 +138,98 @@ model Category {
   updatedAt   DateTime   @updatedAt
   parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
   children    Category[] @relation("CategoryTree")
+  products    Product[]
 
   @@index([parentId, isActive, sortOrder])
+}
+
+model Product {
+  id                   String           @id @default(cuid())
+  sellerId             String
+  categoryId           String
+  name                 String
+  slug                 String
+  shortDescription     String?
+  description          String           @db.Text
+  brand                String?
+  species              String?
+  condition            String?
+  sku                  String?
+  basePriceKobo        Int
+  stockQuantity        Int              @default(0)
+  minimumOrderQuantity Int              @default(1)
+  unitLabel            String           @default("item")
+  status               ProductStatus    @default(DRAFT)
+  isFeatured           Boolean          @default(false)
+  isPublished          Boolean          @default(false)
+  manufacturer         String?
+  activeIngredient     String?
+  dosageForm           String?
+  packSize             String?
+  expiryDate           DateTime?
+  rejectionReason      String?          @db.Text
+  moderatedAt          DateTime?
+  moderatedByUserId    String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  seller               User             @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: Cascade)
+  category             Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  moderatedBy          User?            @relation("ProductModerator", fields: [moderatedByUserId], references: [id], onDelete: SetNull)
+  variants             ProductVariant[]
+  images               ProductImage[]
+  bulkPriceTiers       BulkPriceTier[]
+
+  @@unique([sellerId, slug])
+  @@unique([sellerId, sku])
+  @@index([categoryId, status, isPublished])
+  @@index([sellerId, status, updatedAt])
+  @@index([moderatedByUserId])
+}
+
+model ProductVariant {
+  id            String   @id @default(cuid())
+  productId     String
+  name          String
+  options       Json
+  sku           String?
+  priceKobo     Int
+  stockQuantity Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, sku])
+  @@index([productId, isActive])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  path      String
+  altText   String?
+  sortOrder Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+  @@index([productId, isPrimary])
+}
+
+model BulkPriceTier {
+  id              String   @id @default(cuid())
+  productId       String
+  minimumQuantity Int
+  maximumQuantity Int?
+  unitPriceKobo   Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, minimumQuantity])
+  @@index([productId, minimumQuantity])
 }
 
 model Account {
