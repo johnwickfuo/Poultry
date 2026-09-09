@@ -5,3 +5,4 @@ export interface StorageService {
 
 export { localStorage } from "./local";
 export { storeSettingMedia } from "./media";
+export { storeSellerLogo } from "./seller-logo";

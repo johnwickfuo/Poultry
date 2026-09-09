@@ -1,3 +1,6 @@
+import Link from "next/link";
+
+import { buttonStyles } from "@/components";
 import { requireUser } from "@/server/authorization";
 
 export default async function AccountPage() {
@@ -12,6 +15,7 @@ export default async function AccountPage() {
       <p className="mt-4 text-coop/65">
         Navigation is based on roles loaded from the database on the server.
       </p>
+      <Link className={buttonStyles({ className: "mt-6" })} href={user.sellerProfile ? "/seller" : "/sell/apply"}>{user.sellerProfile ? "View seller application" : "Apply to become a seller"}</Link>
     </section>
   );
 }

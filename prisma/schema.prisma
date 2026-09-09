@@ -20,6 +20,14 @@ enum EmailDeliveryStatus {
   SUPPRESSED
 }
 
+enum SellerVerificationStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
 model User {
   id                     String                   @id @default(cuid())
   email                  String                   @unique
@@ -41,6 +49,8 @@ model User {
   verificationTokens     EmailVerificationToken[]
   passwordResetTokens    PasswordResetToken[]
   emailDeliveries        EmailDelivery[]
+  sellerProfile          SellerProfile?           @relation("SellerOwner")
+  approvedSellerProfiles SellerProfile[]          @relation("SellerApprovals")
 }
 
 model Role {
@@ -75,6 +85,32 @@ model Profile {
   lga         String?
   bio         String? @db.Text
   user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SellerProfile {
+  id                 String                   @id @default(cuid())
+  userId             String                   @unique
+  businessName       String?
+  businessType       String?
+  description        String?                  @db.Text
+  phone              String?
+  whatsapp           String?
+  email              String?
+  state              String?
+  lga                String?
+  address            String?
+  logoPath           String?
+  verificationStatus SellerVerificationStatus @default(DRAFT)
+  rejectionReason    String?                  @db.Text
+  approvedAt         DateTime?
+  approvedByUserId   String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  user               User                     @relation("SellerOwner", fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy         User?                    @relation("SellerApprovals", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([verificationStatus, createdAt])
+  @@index([approvedByUserId])
 }
 
 model Account {

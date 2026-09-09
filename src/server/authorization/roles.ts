@@ -7,3 +7,8 @@ export const ROLE_NAMES = {
 } as const;
 
 export type RoleName = (typeof ROLE_NAMES)[keyof typeof ROLE_NAMES];
+
+export function canAccessSellerDashboard(user: { sellerProfile?: { verificationStatus: string } | null; roles: Array<{ role: { name: string } }> }) {
+  return user.sellerProfile?.verificationStatus === "APPROVED"
+    && user.roles.some((assignment) => assignment.role.name === ROLE_NAMES.SELLER);
+}

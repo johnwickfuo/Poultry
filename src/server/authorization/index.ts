@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/server/authentication";
 import { prisma } from "@/server/database/prisma";
-import type { RoleName } from "@/server/authorization/roles";
+import { canAccessSellerDashboard, type RoleName } from "@/server/authorization/roles";
 
 const userWithRoles = {
   profile: true,
+  sellerProfile: true,
   roles: { include: { role: true } },
 } as const;
 
@@ -65,4 +66,10 @@ export async function requireAnyRole(roles: readonly RoleName[]) {
   return user;
 }
 
-export { ROLE_NAMES, type RoleName } from "@/server/authorization/roles";
+export async function requireApprovedSeller() {
+  const user = await requireUser();
+  if (!canAccessSellerDashboard(user)) redirect("/seller");
+  return user;
+}
+
+export { canAccessSellerDashboard, ROLE_NAMES, type RoleName } from "@/server/authorization/roles";

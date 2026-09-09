@@ -34,6 +34,13 @@ describe("branded email templates", () => {
     expect(template.text).toContain("expires in 1 hour");
     expect(renderToStaticMarkup(template.element)).toContain("The link can only be used once");
   });
+
+  it("renders seller review decisions with business details", () => {
+    const template = buildEmailTemplate("seller_application_rejected", { actionUrl: "https://example.test/seller", recipientName: "Amina", businessName: "Amina Farms", rejectionReason: "Add a complete operating address." }, branding);
+    expect(template.subject).toContain("Amina Farms");
+    expect(template.text).toContain("Add a complete operating address.");
+    expect(renderToStaticMarkup(template.element)).toContain("Update application");
+  });
 });
 
 describe("Resend provider adapter", () => {

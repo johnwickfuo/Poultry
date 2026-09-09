@@ -17,6 +17,7 @@ export default async function AdminLayout({
       logo={branding.logoDark || branding.logo}
       navigation={[
         { href: "/admin", label: "Dashboard" },
+        { href: "/admin/sellers", label: "Seller applications" },
         { href: "/admin/settings", label: "Platform settings" },
         { href: "/admin/mail", label: "Mail previews" },
         { href: "/account", label: "My account" },
