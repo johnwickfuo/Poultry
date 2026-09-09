@@ -179,11 +179,12 @@ model Product {
   images               ProductImage[]
   bulkPriceTiers       BulkPriceTier[]
 
-  @@unique([sellerId, slug])
+  @@unique([slug])
   @@unique([sellerId, sku])
   @@index([categoryId, status, isPublished])
   @@index([sellerId, status, updatedAt])
   @@index([moderatedByUserId])
+  @@fulltext([name, shortDescription, description, brand, species], map: "Product_marketplace_search_idx")
 }
 
 model ProductVariant {

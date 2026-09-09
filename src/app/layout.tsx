@@ -16,6 +16,7 @@ const displayFont = Bitter({
 export async function generateMetadata(): Promise<Metadata> {
   const branding = await BrandingService.getIdentity();
   return {
+    metadataBase: new URL(process.env.APP_URL || "http://localhost:3000"),
     title: {
       default: branding.companyName,
       template: `%s | ${branding.companyShortName}`,

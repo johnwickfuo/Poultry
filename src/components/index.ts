@@ -1,4 +1,11 @@
 export { AccountNavigation } from "./account-navigation";
+export { MarketplaceCategoryStrip } from "./marketplace/category-strip";
+export { MarketplaceCategoryPageContent } from "./marketplace/category-marketplace-page";
+export { MarketplaceFilters } from "./marketplace/marketplace-filters";
+export { ProductGallery } from "./marketplace/product-gallery";
+export { ProductListingCard } from "./marketplace/product-listing-card";
+export { PurchasePanel } from "./marketplace/purchase-panel";
+export { ResultsToolbar } from "./marketplace/results-toolbar";
 export { DashboardShell, type ShellNavItem } from "./layout/dashboard-shell";
 export { SiteFooter } from "./site/footer";
 export { SiteHeader } from "./site/header";

@@ -1,0 +1,6 @@
+import { firstParam, type PublicSearchParams } from "@/server/validation/marketplace";
+
+export function ResultsToolbar({ action, params, total }: { action: string; params: PublicSearchParams; total: number }) {
+  const sort = firstParam(params.sort) || "newest";
+  return <div className="flex flex-col gap-3 border-b border-coop/10 pb-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-coop/60"><strong className="text-coop">{total.toLocaleString("en-NG")}</strong> {total === 1 ? "product" : "products"}</p><form action={action} className="flex items-center gap-2"><span className="text-sm font-semibold text-coop/60">Sort</span>{Object.entries(params).filter(([key, value]) => key !== "sort" && key !== "page" && firstParam(value)).map(([key, value]) => <input key={key} name={key} type="hidden" value={firstParam(value)}/>) }<select aria-label="Sort products" className="min-h-10 rounded-control border border-coop/20 bg-white px-3 text-sm font-semibold text-coop" defaultValue={sort} name="sort"><option value="newest">Newest</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="popularity">Popularity</option></select><button className="min-h-10 rounded-control bg-coop px-3 text-sm font-bold text-white" type="submit">Apply</button></form></div>;
+}

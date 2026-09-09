@@ -7,10 +7,10 @@ import { CategoryCard, ResponsiveImage } from "@/components/ui/commerce";
 import { Icon } from "@/components/ui/icons";
 
 const defaultCategories = [
-  { name: "Live birds", description: "Broilers, layers and point-of-lay birds", image: "/images/poultry/live-birds.webp", href: "/categories/live-birds" },
-  { name: "Fresh eggs", description: "Table eggs by crate, tray or bulk order", image: "/images/poultry/eggs.webp", href: "/categories/eggs" },
-  { name: "Day-old chicks", description: "Hatchery listings and scheduled supply", image: "/images/poultry/day-old-chicks.webp", href: "/categories/day-old-chicks" },
-  { name: "Feed & supplements", description: "Practical inputs for every production stage", image: "/images/poultry/feed.webp", href: "/categories/feed" },
+  { name: "Live birds", description: "Broilers, layers and point-of-lay birds", image: "/images/poultry/live-birds.webp", href: "/marketplace/category/live-birds" },
+  { name: "Fresh eggs", description: "Table eggs by crate, tray or bulk order", image: "/images/poultry/eggs.webp", href: "/marketplace/category/eggs" },
+  { name: "Day-old chicks", description: "Hatchery listings and scheduled supply", image: "/images/poultry/day-old-chicks.webp", href: "/marketplace/category/day-old-chicks-poults" },
+  { name: "Feed & supplements", description: "Practical inputs for every production stage", image: "/images/poultry/feed.webp", href: "/marketplace/category/poultry-feed" },
 ];
 
 type HomeBranding = {
