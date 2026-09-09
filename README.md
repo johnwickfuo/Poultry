@@ -20,6 +20,12 @@ so a user can hold several roles without separate seller, mentor, worker, or
 employer user tables. Run `npm run db:seed` after migration to create the five
 standard roles and the first admin configured in `.env`.
 
+Credentials authentication includes registration, email verification, login,
+logout, password recovery, database-backed rate limits, and JWT session
+revocation. New registrations start as `PENDING` with no roles and become
+`ACTIVE` only after email verification. Suspended and soft-deleted accounts are
+rejected at sign-in and re-checked during subsequent session use.
+
 ## Quality checks
 
 ```bash

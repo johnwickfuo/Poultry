@@ -14,19 +14,22 @@ enum UserStatus {
 }
 
 model User {
-  id              String     @id @default(cuid())
-  email           String     @unique
-  username        String     @unique
-  passwordHash    String?
-  emailVerifiedAt DateTime?
-  status          UserStatus @default(PENDING)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
-  profile         Profile?
-  roles           UserRole[]
-  accounts        Account[]
-  sessions        Session[]
+  id                  String                   @id @default(cuid())
+  email               String                   @unique
+  username            String                   @unique
+  passwordHash        String?
+  emailVerifiedAt     DateTime?
+  status              UserStatus               @default(PENDING)
+  sessionVersion      Int                      @default(0)
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  deletedAt           DateTime?
+  profile             Profile?
+  roles               UserRole[]
+  accounts            Account[]
+  sessions            Session[]
+  verificationTokens  EmailVerificationToken[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Role {
@@ -98,4 +101,37 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model RateLimit {
+  key       String   @id @db.VarChar(64)
+  count     Int      @default(0)
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
 }

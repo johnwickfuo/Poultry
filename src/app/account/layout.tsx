@@ -1,4 +1,5 @@
 import { AccountNavigation } from "@/components";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { requireUser } from "@/server/authorization";
 
 export default async function AccountLayout({
@@ -9,7 +10,10 @@ export default async function AccountLayout({
 
   return (
     <main className="mx-auto min-h-screen max-w-5xl px-6 py-12">
-      <AccountNavigation roles={roles} />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <AccountNavigation roles={roles} />
+        <LogoutButton />
+      </div>
       <div className="mt-10">{children}</div>
     </main>
   );
