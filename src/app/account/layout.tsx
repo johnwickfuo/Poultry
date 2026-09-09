@@ -10,6 +10,7 @@ export default async function AccountLayout({
   const branding = await BrandingService.getIdentity();
   const navigation: ShellNavItem[] = [
     { href: "/account", label: "Account overview" },
+    { href: "/account/orders", label: "My orders" },
     ...(roles.includes("seller") ? [{ href: "/seller", label: "Seller workspace" }] : []),
     ...(roles.includes("mentor") ? [{ href: "/mentor", label: "Mentor workspace" }] : []),
     ...(roles.includes("admin") ? [{ href: "/admin", label: "Administration" }] : []),

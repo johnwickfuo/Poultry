@@ -37,6 +37,27 @@ enum ProductStatus {
   ARCHIVED
 }
 
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PARTIALLY_FULFILLED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum SubOrderStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  DISPUTED
+  REFUNDED
+  SETTLED
+}
+
 model User {
   id                     String                   @id @default(cuid())
   email                  String                   @unique
@@ -63,6 +84,8 @@ model User {
   products               Product[]                @relation("SellerProducts")
   moderatedProducts      Product[]                @relation("ProductModerator")
   cart                   Cart?
+  orders                 Order[]                  @relation("BuyerOrders")
+  sellerSubOrders        SubOrder[]               @relation("SellerSubOrders")
 }
 
 model Role {
@@ -180,6 +203,7 @@ model Product {
   images               ProductImage[]
   bulkPriceTiers       BulkPriceTier[]
   cartItems            CartItem[]
+  orderItems           OrderItem[]
 
   @@unique([slug])
   @@unique([sellerId, sku])
@@ -190,18 +214,19 @@ model Product {
 }
 
 model ProductVariant {
-  id            String     @id @default(cuid())
+  id            String      @id @default(cuid())
   productId     String
   name          String
   options       Json
   sku           String?
   priceKobo     Int
-  stockQuantity Int        @default(0)
-  isActive      Boolean    @default(true)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  product       Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stockQuantity Int         @default(0)
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   cartItems     CartItem[]
+  orderItems    OrderItem[]
 
   @@unique([productId, sku])
   @@index([productId, isActive])
@@ -263,6 +288,70 @@ model CartItem {
   variant               ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@unique([cartId, productId, variantKey])
+  @@index([productId])
+  @@index([variantId])
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  userId            String
+  reference         String      @unique @db.VarChar(32)
+  subtotalKobo      BigInt
+  deliveryTotalKobo BigInt
+  grandTotalKobo    BigInt
+  currency          String      @default("NGN") @db.Char(3)
+  status            OrderStatus @default(PENDING_PAYMENT)
+  paymentGateway    String      @db.VarChar(32)
+  gatewayReference  String?     @unique @db.VarChar(191)
+  paidAt            DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  user              User        @relation("BuyerOrders", fields: [userId], references: [id], onDelete: Restrict)
+  subOrders         SubOrder[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model SubOrder {
+  id                        String         @id @default(cuid())
+  orderId                   String
+  sellerId                  String
+  subtotalKobo              BigInt
+  commissionPercentSnapshot Decimal        @db.Decimal(5, 2)
+  commissionAmountKobo      BigInt
+  sellerPayoutAmountKobo    BigInt
+  deliveryMethod            String         @default("PENDING_SELECTION") @db.VarChar(64)
+  deliveryFeeKobo           BigInt         @default(0)
+  status                    SubOrderStatus @default(PENDING)
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+  order                     Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  seller                    User           @relation("SellerSubOrders", fields: [sellerId], references: [id], onDelete: Restrict)
+  items                     OrderItem[]
+
+  @@index([orderId, status])
+  @@index([sellerId, createdAt])
+}
+
+model OrderItem {
+  id                 String          @id @default(cuid())
+  subOrderId         String
+  productId          String?
+  variantId          String?
+  productName        String
+  variantLabel       String?
+  sku                String?
+  quantity           Int
+  unitPriceKobo      BigInt
+  lineTotalKobo      BigInt
+  productImagePath   String?
+  inventoryAppliedAt DateTime?
+  subOrder           SubOrder        @relation(fields: [subOrderId], references: [id], onDelete: Restrict)
+  product            Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variant            ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([subOrderId])
   @@index([productId])
   @@index([variantId])
 }
