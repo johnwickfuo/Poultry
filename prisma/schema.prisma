@@ -13,23 +13,34 @@ enum UserStatus {
   SUSPENDED
 }
 
+enum EmailDeliveryStatus {
+  QUEUED
+  SENT
+  FAILED
+  SUPPRESSED
+}
+
 model User {
-  id                  String                   @id @default(cuid())
-  email               String                   @unique
-  username            String                   @unique
-  passwordHash        String?
-  emailVerifiedAt     DateTime?
-  status              UserStatus               @default(PENDING)
-  sessionVersion      Int                      @default(0)
-  createdAt           DateTime                 @default(now())
-  updatedAt           DateTime                 @updatedAt
-  deletedAt           DateTime?
-  profile             Profile?
-  roles               UserRole[]
-  accounts            Account[]
-  sessions            Session[]
-  verificationTokens  EmailVerificationToken[]
-  passwordResetTokens PasswordResetToken[]
+  id                     String                   @id @default(cuid())
+  email                  String                   @unique
+  username               String                   @unique
+  passwordHash           String?
+  emailVerifiedAt        DateTime?
+  emailHardBouncedAt     DateTime?
+  emailSuppressedAt      DateTime?
+  emailSuppressionReason String?                  @db.VarChar(500)
+  status                 UserStatus               @default(PENDING)
+  sessionVersion         Int                      @default(0)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  deletedAt              DateTime?
+  profile                Profile?
+  roles                  UserRole[]
+  accounts               Account[]
+  sessions               Session[]
+  verificationTokens     EmailVerificationToken[]
+  passwordResetTokens    PasswordResetToken[]
+  emailDeliveries        EmailDelivery[]
 }
 
 model Role {
@@ -141,4 +152,24 @@ model Setting {
   value     String   @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model EmailDelivery {
+  id                String              @id @default(cuid())
+  userId            String?
+  recipient         String              @db.VarChar(320)
+  template          String              @db.VarChar(64)
+  provider          String              @db.VarChar(32)
+  providerMessageId String?             @db.VarChar(191)
+  status            EmailDeliveryStatus @default(QUEUED)
+  subject           String              @db.VarChar(255)
+  failureReason     String?             @db.Text
+  createdAt         DateTime            @default(now())
+  sentAt            DateTime?
+  user              User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerMessageId])
+  @@index([userId, createdAt])
+  @@index([recipient, createdAt])
+  @@index([status, createdAt])
 }

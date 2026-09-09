@@ -18,6 +18,7 @@ export default async function AdminLayout({
       navigation={[
         { href: "/admin", label: "Dashboard" },
         { href: "/admin/settings", label: "Platform settings" },
+        { href: "/admin/mail", label: "Mail previews" },
         { href: "/account", label: "My account" },
       ]}
       shortName={branding.companyShortName}

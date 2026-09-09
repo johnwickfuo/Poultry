@@ -15,15 +15,9 @@ export const serverEnvSchema = z.object({
   DATABASE_URL: z.string().startsWith("mysql://"),
   AUTH_SECRET: z.string().min(32),
   APP_URL: z.url(),
-  MAIL_HOST: optionalString,
-  MAIL_PORT: z.coerce.number().int().positive().default(587),
-  MAIL_SECURE: z
-    .enum(["true", "false"])
-    .default("false")
-    .transform((value) => value === "true"),
-  MAIL_USER: optionalString,
-  MAIL_PASSWORD: optionalString,
+  MAIL_PROVIDER: z.enum(["resend"]).default("resend"),
   MAIL_FROM: optionalString,
+  RESEND_API_KEY: optionalString,
   PAYSTACK_PUBLIC_KEY: optionalString,
   PAYSTACK_SECRET_KEY: optionalString,
   FLUTTERWAVE_PUBLIC_KEY: optionalString,

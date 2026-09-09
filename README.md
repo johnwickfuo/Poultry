@@ -42,6 +42,12 @@ workspace shells live in `src/components/site` and `src/components/layout`.
 Initial poultry photography is stored locally under `public/images/poultry`;
 source authors and reusable licenses are recorded in that folder.
 
+Transactional email is delivered through the provider-agnostic `MailService`.
+The initial adapter uses Resend's HTTPS API selected by `MAIL_PROVIDER=resend`;
+local VPS SMTP is not used. Configure `MAIL_FROM` with a verified sender and set
+`RESEND_API_KEY` only in the deployment environment. Administrators can preview
+templates, send logged tests and review recent delivery attempts at `/admin/mail`.
+
 ## Quality checks
 
 ```bash
