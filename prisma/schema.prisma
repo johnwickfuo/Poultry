@@ -46,6 +46,13 @@ enum OrderStatus {
   REFUNDED
 }
 
+enum PaymentTransactionStatus {
+  PENDING
+  INITIALIZED
+  FAILED
+  VERIFIED
+}
+
 enum SubOrderStatus {
   PENDING
   ACCEPTED
@@ -314,24 +321,45 @@ model CartItem {
 }
 
 model Order {
-  id                String      @id @default(cuid())
-  userId            String
-  reference         String      @unique @db.VarChar(32)
-  subtotalKobo      BigInt
-  deliveryTotalKobo BigInt
-  grandTotalKobo    BigInt
-  currency          String      @default("NGN") @db.Char(3)
-  status            OrderStatus @default(PENDING_PAYMENT)
-  paymentGateway    String      @db.VarChar(32)
-  gatewayReference  String?     @unique @db.VarChar(191)
-  paidAt            DateTime?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  user              User        @relation("BuyerOrders", fields: [userId], references: [id], onDelete: Restrict)
-  subOrders         SubOrder[]
+  id                  String               @id @default(cuid())
+  userId              String
+  reference           String               @unique @db.VarChar(32)
+  subtotalKobo        BigInt
+  deliveryTotalKobo   BigInt
+  grandTotalKobo      BigInt
+  currency            String               @default("NGN") @db.Char(3)
+  status              OrderStatus          @default(PENDING_PAYMENT)
+  paymentGateway      String               @db.VarChar(32)
+  gatewayReference    String?              @unique @db.VarChar(191)
+  paidAt              DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  user                User                 @relation("BuyerOrders", fields: [userId], references: [id], onDelete: Restrict)
+  subOrders           SubOrder[]
+  paymentTransactions PaymentTransaction[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
+}
+
+model PaymentTransaction {
+  id                String                   @id @default(cuid())
+  orderId           String
+  provider          String                   @db.VarChar(32)
+  internalReference String                   @unique @db.VarChar(64)
+  gatewayReference  String?                  @unique @db.VarChar(191)
+  amountKobo        BigInt
+  currency          String                   @default("NGN") @db.Char(3)
+  status            PaymentTransactionStatus @default(PENDING)
+  failureCode       String?                  @db.VarChar(64)
+  createdAt         DateTime                 @default(now())
+  initializedAt     DateTime?
+  verifiedAt        DateTime?
+  updatedAt         DateTime                 @updatedAt
+  order             Order                    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@index([provider, status])
 }
 
 model SubOrder {

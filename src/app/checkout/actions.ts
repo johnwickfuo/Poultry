@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/server/authorization";
 import { DeliveryError } from "@/server/delivery";
 import { createOrderFromCart, OrderError } from "@/server/orders";
+import { initializeOrderPayment, PaymentGatewayError, PaymentServiceError } from "@/server/payments";
 import { deliveryMethodSchema, nigerianStateSchema } from "@/server/validation/delivery";
 
 export async function createOrderAction(formData: FormData) {
@@ -31,5 +32,24 @@ export async function createOrderAction(formData: FormData) {
     redirect(`/checkout?error=${encodeURIComponent(message)}`);
   }
 
-  redirect(`/account/orders/${reference}`);
+  try {
+    const payment = await initializeOrderPayment(user.id, reference);
+    redirect(payment.authorizationUrl);
+  } catch (error) {
+    const message = error instanceof PaymentGatewayError || error instanceof PaymentServiceError ? error.message : "Order created, but payment could not be initialized.";
+    redirect(`/account/orders/${reference}?error=${encodeURIComponent(message)}`);
+  }
+}
+
+export async function startOrderPaymentAction(formData: FormData) {
+  const user = await requireUser();
+  const reference = formData.get("orderReference");
+  if (typeof reference !== "string" || !reference) redirect("/account/orders");
+  try {
+    const payment = await initializeOrderPayment(user.id, reference);
+    redirect(payment.authorizationUrl);
+  } catch (error) {
+    const message = error instanceof PaymentGatewayError || error instanceof PaymentServiceError ? error.message : "Payment could not be initialized.";
+    redirect(`/account/orders/${reference}?error=${encodeURIComponent(message)}`);
+  }
 }
