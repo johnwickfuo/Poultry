@@ -26,6 +26,15 @@ function numberSetting(
   };
 }
 
+function booleanSetting(defaultValue: boolean): SettingDefinition<boolean> {
+  const schema = z.enum(["true", "false"]);
+  return {
+    defaultValue,
+    parse: (raw) => schema.parse(raw) === "true",
+    serialize: (value) => String(z.boolean().parse(value)),
+  };
+}
+
 function enumSetting<const T extends readonly [string, ...string[]]>(
   values: T,
   defaultValue: T[number],
@@ -60,6 +69,7 @@ export const SETTING_DEFINITIONS = {
   consultation_urgent_response_hours: numberSetting(6, { min: 1, max: 168 }),
   buyer_request_expiry_days: numberSetting(14, { min: 1, max: 365 }),
   quote_validity_days: numberSetting(30, { min: 1, max: 365 }),
+  delivery_quote_enabled: booleanSetting(false),
   settlement_driver: enumSetting(["escrow"] as const, "escrow"),
   active_payment_gateway: enumSetting(
     ["paystack", "flutterwave"] as const,
@@ -103,6 +113,7 @@ export const SETTING_SEED_VALUES: { [K in SettingKey]: SettingValue<K> } = {
   consultation_urgent_response_hours: 6,
   buyer_request_expiry_days: 14,
   quote_validity_days: 30,
+  delivery_quote_enabled: false,
   settlement_driver: "escrow",
   active_payment_gateway: "paystack",
   payout_mode: "manual_request",
@@ -129,6 +140,7 @@ export const PLATFORM_SETTING_KEYS = [
   "consultation_urgent_response_hours",
   "buyer_request_expiry_days",
   "quote_validity_days",
+  "delivery_quote_enabled",
   "settlement_driver",
   "payout_mode",
   "dispute_window_days",

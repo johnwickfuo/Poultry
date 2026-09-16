@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   product: { update: vi.fn(), updateMany: vi.fn() },
   productVariant: { update: vi.fn(), updateMany: vi.fn() },
   settings: { getSettings: vi.fn() },
+  delivery: { validateSelections: vi.fn() },
 }));
 
 vi.mock("@/server/database/prisma", () => ({
@@ -18,6 +19,7 @@ vi.mock("@/server/database/prisma", () => ({
   },
 }));
 vi.mock("@/server/settings", () => ({ getSettings: mocks.settings.getSettings }));
+vi.mock("@/server/delivery", () => ({ validateDeliverySelections: mocks.delivery.validateSelections }));
 
 import {
   buildOrderDraft,
@@ -62,6 +64,20 @@ const lines = [
     productImagePath: "/media/products/trays.webp",
   },
 ];
+
+function deliveryMap(overrides: Record<string, Partial<{ method: "SELLER_ARRANGED" | "BUYER_PICKUP" | "QUOTE_REQUIRED"; feeKobo: bigint }>> = {}) {
+  return new Map(["seller_a", "seller_b"].map((sellerId) => [sellerId, {
+    method: "BUYER_PICKUP" as const,
+    feeKobo: 0n,
+    deliveryState: null,
+    pickupAddressSnapshot: "Farm gate, Ogun",
+    pickupInstructionsSnapshot: null,
+    createQuoteRequest: false,
+    ...overrides[sellerId],
+  }]));
+}
+
+const checkoutDeliveryInput = { buyerState: "Ogun" as const, selections: { seller_a: "BUYER_PICKUP" as const, seller_b: "BUYER_PICKUP" as const } };
 
 function cartItem(line: (typeof lines)[number], id: string) {
   return {
@@ -138,11 +154,12 @@ beforeEach(() => {
   });
   mocks.order.create.mockResolvedValue({ id: "order_1", reference: "POU-20260909-ABCDEF123456" });
   mocks.cartItem.deleteMany.mockResolvedValue({ count: 3 });
+  mocks.delivery.validateSelections.mockResolvedValue(deliveryMap());
 });
 
 describe("order draft calculations", () => {
   it("splits a cart into one seller sub-order and commission snapshot per seller", () => {
-    const draft = buildOrderDraft(lines, 7.5, "paystack");
+    const draft = buildOrderDraft(lines, 7.5, "paystack", deliveryMap());
     expect(draft.subOrders).toHaveLength(2);
     expect(draft.subOrders[0]).toMatchObject({
       sellerId: "seller_a",
@@ -160,10 +177,10 @@ describe("order draft calculations", () => {
   });
 
   it("reconciles item, sub-order, delivery and parent totals exactly", () => {
-    const delivery = new Map([
-      ["seller_a", { method: "COURIER", feeKobo: 1_500n }],
-      ["seller_b", { method: "PICKUP", feeKobo: 2_500n }],
-    ]);
+    const delivery = deliveryMap({
+      seller_a: { method: "SELLER_ARRANGED", feeKobo: 1_500n },
+      seller_b: { method: "BUYER_PICKUP", feeKobo: 2_500n },
+    });
     const draft = buildOrderDraft(lines, 7.5, "paystack", delivery);
     expect(draft.subtotalKobo).toBe(280_002n);
     expect(draft.deliveryTotalKobo).toBe(4_000n);
@@ -173,7 +190,7 @@ describe("order draft calculations", () => {
 
   it("uses immutable historical product snapshots", () => {
     const source = lines.map((line) => ({ ...line }));
-    const draft = buildOrderDraft(source, 5, "paystack");
+    const draft = buildOrderDraft(source, 5, "paystack", deliveryMap());
     source[0].productName = "Renamed live product";
     source[0].unitPriceKobo = 999_999;
     expect(draft.subOrders[0].items[0]).toMatchObject({
@@ -188,7 +205,7 @@ describe("order draft calculations", () => {
 
   it("performs commission and line calculations in integer kobo", () => {
     expect(calculateCommissionKobo(100_001n, 750)).toBe(7_500n);
-    const item = buildOrderDraft(lines.slice(0, 1), 7.5, "paystack").subOrders[0].items[0];
+    const item = buildOrderDraft(lines.slice(0, 1), 7.5, "paystack", deliveryMap()).subOrders[0].items[0];
     expect(typeof item.unitPriceKobo).toBe("bigint");
     expect(typeof item.lineTotalKobo).toBe("bigint");
   });
@@ -205,7 +222,7 @@ describe("transactional order creation", () => {
       userId: "buyer_1",
       items: lines.map((line, index) => cartItem(line, `item_${index}`)),
     });
-    await expect(createOrderFromCart("buyer_1")).resolves.toMatchObject({ id: "order_1" });
+    await expect(createOrderFromCart("buyer_1", checkoutDeliveryInput)).resolves.toMatchObject({ id: "order_1" });
     expect(mocks.order.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         userId: "buyer_1",
@@ -224,7 +241,7 @@ describe("transactional order creation", () => {
     changed.product.basePriceKobo += 1;
     changed.variant!.priceKobo += 1;
     mocks.cart.findUnique.mockResolvedValue({ id: "cart_1", userId: "buyer_1", items: [changed] });
-    await expect(createOrderFromCart("buyer_1")).rejects.toMatchObject({ code: "PRICE_CHANGED" });
+    await expect(createOrderFromCart("buyer_1", checkoutDeliveryInput)).rejects.toMatchObject({ code: "PRICE_CHANGED" });
     expect(mocks.order.create).not.toHaveBeenCalled();
   });
 
@@ -240,7 +257,7 @@ describe("transactional order creation", () => {
       const item = cartItem(lines[0], "item_1");
       invalidate(item);
       mocks.cart.findUnique.mockResolvedValue({ id: "cart_1", userId: "buyer_1", items: [item] });
-      await expect(createOrderFromCart("buyer_1")).rejects.toMatchObject({ code: "INVALID_CART" });
+      await expect(createOrderFromCart("buyer_1", checkoutDeliveryInput)).rejects.toMatchObject({ code: "INVALID_CART" });
     }
     expect(mocks.order.create).not.toHaveBeenCalled();
   });

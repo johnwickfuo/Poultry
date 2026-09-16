@@ -19,6 +19,7 @@ export default async function SellerLayout({
         { href: "/seller", label: "Overview" },
         { href: "/seller/products", label: "Products" },
         { href: "/seller/orders", label: "Orders" },
+        { href: "/seller/delivery-settings", label: "Delivery settings" },
         { href: "/account", label: "My account" },
       ] : [{ href: "/seller", label: "Application status" }, { href: "/account", label: "My account" }]}
       shortName={branding.companyShortName}

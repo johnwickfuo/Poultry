@@ -3,7 +3,9 @@ import { Prisma } from "@prisma/client";
 
 import { reviewCartLine, type CartLine } from "@/server/cart/cart-service";
 import { prisma } from "@/server/database/prisma";
+import { validateDeliverySelections, type ResolvedDelivery } from "@/server/delivery";
 import { getSettings } from "@/server/settings";
+import type { CheckoutDeliveryInput } from "@/server/validation/delivery";
 
 export class OrderError extends Error {
   constructor(
@@ -32,10 +34,7 @@ type OrderLineInput = {
   productImagePath: string | null;
 };
 
-export type DeliveryQuote = {
-  method: string;
-  feeKobo: bigint;
-};
+export type DeliveryQuote = ResolvedDelivery;
 
 export type OrderDraft = ReturnType<typeof buildOrderDraft>;
 
@@ -122,7 +121,7 @@ export function buildOrderDraft(
   lines: readonly OrderLineInput[],
   commissionPercent: number,
   paymentGateway: string,
-  deliveryQuotes: ReadonlyMap<string, DeliveryQuote> = new Map(),
+  deliveryQuotes: ReadonlyMap<string, DeliveryQuote>,
 ) {
   if (!lines.length) throw new OrderError("EMPTY_CART", "Your cart is empty.");
   if (!paymentGateway.trim()) {
@@ -157,10 +156,8 @@ export function buildOrderDraft(
       subtotalKobo,
       basisPoints,
     );
-    const delivery = deliveryQuotes.get(sellerId) ?? {
-      method: "PENDING_SELECTION",
-      feeKobo: 0n,
-    };
+    const delivery = deliveryQuotes.get(sellerId);
+    if (!delivery) throw new OrderError("INVALID_CART", "Choose a delivery method for every seller.");
     if (delivery.feeKobo < 0n || !delivery.method.trim()) {
       throw new OrderError("INVALID_CART", "Delivery details are invalid.");
     }
@@ -173,6 +170,10 @@ export function buildOrderDraft(
       sellerPayoutAmountKobo: subtotalKobo - commissionAmountKobo,
       deliveryMethod: delivery.method,
       deliveryFeeKobo: delivery.feeKobo,
+      deliveryState: delivery.deliveryState,
+      pickupAddressSnapshot: delivery.pickupAddressSnapshot,
+      pickupInstructionsSnapshot: delivery.pickupInstructionsSnapshot,
+      createQuoteRequest: delivery.createQuoteRequest,
       items,
     };
   });
@@ -224,7 +225,7 @@ function lineSnapshot(line: CartLine): OrderLineInput {
   };
 }
 
-export async function createOrderFromCart(userId: string) {
+export async function createOrderFromCart(userId: string, deliveryInput: CheckoutDeliveryInput) {
   const settings = await getSettings([
     "marketplace_commission_percent",
     "active_payment_gateway",
@@ -258,6 +259,11 @@ export async function createOrderFromCart(userId: string) {
         snapshots,
         settings.marketplace_commission_percent,
         settings.active_payment_gateway,
+        await validateDeliverySelections(
+          [...new Set(snapshots.map(({ sellerId }) => sellerId))],
+          deliveryInput,
+          tx,
+        ),
       );
 
       const order = await tx.order.create({
@@ -279,7 +285,11 @@ export async function createOrderFromCart(userId: string) {
               sellerPayoutAmountKobo: subOrder.sellerPayoutAmountKobo,
               deliveryMethod: subOrder.deliveryMethod,
               deliveryFeeKobo: subOrder.deliveryFeeKobo,
+              deliveryState: subOrder.deliveryState,
+              pickupAddressSnapshot: subOrder.pickupAddressSnapshot,
+              pickupInstructionsSnapshot: subOrder.pickupInstructionsSnapshot,
               items: { create: subOrder.items },
+              deliveryQuote: subOrder.createQuoteRequest ? { create: {} } : undefined,
             })),
           },
         },

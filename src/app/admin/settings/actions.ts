@@ -43,6 +43,7 @@ const platformRulesSchema = z.object({
   consultation_urgent_response_hours: z.coerce.number().int().min(1).max(168),
   buyer_request_expiry_days: z.coerce.number().int().min(1).max(365),
   quote_validity_days: z.coerce.number().int().min(1).max(365),
+  delivery_quote_enabled: z.preprocess((value) => value === "on", z.boolean()),
   dispute_window_days: z.coerce.number().int().min(1).max(90),
   consultation_followup_days: z.coerce.number().int().min(1).max(365),
 });

@@ -71,11 +71,13 @@ type RuleValues = {
   consultation_urgent_response_hours: number;
   buyer_request_expiry_days: number;
   quote_validity_days: number;
+  delivery_quote_enabled: boolean;
   dispute_window_days: number;
   consultation_followup_days: number;
 };
 
-const ruleFields: Array<{ key: keyof RuleValues; label: string; suffix: string; step?: string }> = [
+type NumericRuleKey = Exclude<keyof RuleValues, "delivery_quote_enabled">;
+const ruleFields: Array<{ key: NumericRuleKey; label: string; suffix: string; step?: string }> = [
   { key: "marketplace_commission_percent", label: "Marketplace commission", suffix: "%", step: "0.01" },
   { key: "consultation_standard_response_hours", label: "Standard consultation response", suffix: "hours" },
   { key: "consultation_urgent_response_hours", label: "Urgent consultation response", suffix: "hours" },
@@ -108,6 +110,10 @@ export function PlatformRulesForm({ values }: { values: RuleValues }) {
           />
         ))}
       </div>
+      <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
+        <input className="mt-0.5 size-5 accent-emerald-700" defaultChecked={values.delivery_quote_enabled} name="delivery_quote_enabled" type="checkbox" />
+        <span><span className="block text-sm font-semibold text-slate-900">Enable quote-required delivery</span><span className="mt-1 block text-xs leading-5 text-slate-500">Disabled by default. Seller-arranged delivery and buyer pickup remain available.</span></span>
+      </label>
       <SaveButton pending={pending} />
     </form>
   );

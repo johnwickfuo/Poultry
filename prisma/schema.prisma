@@ -58,6 +58,21 @@ enum SubOrderStatus {
   SETTLED
 }
 
+enum DeliveryMethod {
+  SELLER_ARRANGED
+  BUYER_PICKUP
+  QUOTE_REQUIRED
+}
+
+enum DeliveryQuoteStatus {
+  REQUESTED
+  QUOTED
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+  TOP_UP_PAID
+}
+
 model User {
   id                     String                   @id @default(cuid())
   email                  String                   @unique
@@ -86,6 +101,7 @@ model User {
   cart                   Cart?
   orders                 Order[]                  @relation("BuyerOrders")
   sellerSubOrders        SubOrder[]               @relation("SellerSubOrders")
+  sellerDeliveryRates    SellerDeliveryRate[]     @relation("SellerDeliveryRates")
 }
 
 model Role {
@@ -143,6 +159,11 @@ model SellerProfile {
   updatedAt          DateTime                 @updatedAt
   user               User                     @relation("SellerOwner", fields: [userId], references: [id], onDelete: Cascade)
   approvedBy         User?                    @relation("SellerApprovals", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  buyerPickupEnabled Boolean                  @default(false)
+  pickupState        String?
+  pickupLga          String?
+  pickupAddress      String?
+  pickupInstructions String?                  @db.Text
 
   @@index([verificationStatus, createdAt])
   @@index([approvedByUserId])
@@ -314,24 +335,61 @@ model Order {
 }
 
 model SubOrder {
-  id                        String         @id @default(cuid())
-  orderId                   String
-  sellerId                  String
-  subtotalKobo              BigInt
-  commissionPercentSnapshot Decimal        @db.Decimal(5, 2)
-  commissionAmountKobo      BigInt
-  sellerPayoutAmountKobo    BigInt
-  deliveryMethod            String         @default("PENDING_SELECTION") @db.VarChar(64)
-  deliveryFeeKobo           BigInt         @default(0)
-  status                    SubOrderStatus @default(PENDING)
-  createdAt                 DateTime       @default(now())
-  updatedAt                 DateTime       @updatedAt
-  order                     Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  seller                    User           @relation("SellerSubOrders", fields: [sellerId], references: [id], onDelete: Restrict)
-  items                     OrderItem[]
+  id                         String                @id @default(cuid())
+  orderId                    String
+  sellerId                   String
+  subtotalKobo               BigInt
+  commissionPercentSnapshot  Decimal               @db.Decimal(5, 2)
+  commissionAmountKobo       BigInt
+  sellerPayoutAmountKobo     BigInt
+  deliveryMethod             DeliveryMethod
+  deliveryFeeKobo            BigInt                @default(0)
+  deliveryState              String?
+  pickupAddressSnapshot      String?               @db.Text
+  pickupInstructionsSnapshot String?               @db.Text
+  status                     SubOrderStatus        @default(PENDING)
+  createdAt                  DateTime              @default(now())
+  updatedAt                  DateTime              @updatedAt
+  order                      Order                 @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  seller                     User                  @relation("SellerSubOrders", fields: [sellerId], references: [id], onDelete: Restrict)
+  items                      OrderItem[]
+  deliveryQuote              DeliveryQuoteRequest?
 
   @@index([orderId, status])
   @@index([sellerId, createdAt])
+}
+
+model SellerDeliveryRate {
+  id        String   @id @default(cuid())
+  sellerId  String
+  state     String
+  feeKobo   BigInt
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  seller    User     @relation("SellerDeliveryRates", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@unique([sellerId, state])
+  @@index([sellerId, isActive])
+}
+
+model DeliveryQuoteRequest {
+  id                    String              @id @default(cuid())
+  subOrderId            String              @unique
+  status                DeliveryQuoteStatus @default(REQUESTED)
+  sellerAmountKobo      BigInt?
+  sellerNote            String?             @db.Text
+  requestedAt           DateTime            @default(now())
+  quotedAt              DateTime?
+  expiresAt             DateTime?
+  acceptedAt            DateTime?
+  topUpPaymentGateway   String?             @db.VarChar(32)
+  topUpGatewayReference String?             @unique @db.VarChar(191)
+  topUpPaidAt           DateTime?
+  updatedAt             DateTime            @updatedAt
+  subOrder              SubOrder            @relation(fields: [subOrderId], references: [id], onDelete: Restrict)
+
+  @@index([status, expiresAt])
 }
 
 model OrderItem {
